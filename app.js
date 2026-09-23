@@ -16,7 +16,7 @@ function updateJam() {
 updateJam();
 setInterval(updateJam, 1000);
 
-// 2. INISIALISASI GRAFIK
+// 2. INISIALISASI GRAFIK (CHART.JS)
 let grafikW = [], dataS = [], dataK = [], dataU = [];
 
 function buatChart(ctx, dataArr, color, bgColor) {
@@ -52,7 +52,7 @@ let chartS = buatChart('chartSuhu', dataS, '#e11d48', 'rgba(225, 29, 72, 0.15)')
 let chartK = buatChart('chartKelembapan', dataK, '#0d9488', 'rgba(13, 148, 136, 0.15)');
 let chartU = buatChart('chartUdara', dataU, '#c026d3', 'rgba(192, 38, 211, 0.15)');
 
-// 3. KONEKSI MQTT REAL MAQIATTO VIA WEBSOCKET SSL
+// 3. KONEKSI MQTT MAQIATTO VIA WEBSOCKET SSL
 const client = mqtt.connect('wss://maqiatto.com:8883/mqtt', { 
     clientId: 'web_raisya_' + Math.random().toString(16).substr(2, 6), 
     username: MAQIATTO_USER, 
@@ -80,7 +80,7 @@ client.on('error', (err) => {
     }
 });
 
-// MENERIMA DATA SENSOR DARI ESP8266 LEO MAQIATTO
+// MENERIMA DATA SENSOR REAL-TIME DARI MAQIATTO
 client.on('message', (topic, message) => {
     if (topic === TOPIK_SENSOR) {
         let d = JSON.parse(message.toString());
@@ -115,7 +115,7 @@ function kirimPerintah() {
         client.publish(TOPIK_KONTROL, cmd);
         let notif = document.getElementById('notif-simpan');
         if (notif) {
-            notif.innerHTML = `<div class='alert alert-success fw-bold text-center mt-2'>✨ Perintah <b>${cmd}</b> berhasil dikirim ke Maqiatto!</div>`;
+            notif.innerHTML = `<div class='alert alert-success fw-bold text-center mt-2'>✨ Perintah <b>${cmd}</b> berhasil dikirim!</div>`;
             setTimeout(() => notif.innerHTML = '', 3000);
         }
     } else {
@@ -123,7 +123,7 @@ function kirimPerintah() {
     }
 }
 
-// 5. FETCH DATA HISTORI MYSQL INFINITYFREE
+// 5. FETCH DATA LOG MYSQL DARI INFINITYFREE
 let btnDatalog = document.getElementById('btn-tab-datalog');
 if (btnDatalog) {
     btnDatalog.addEventListener('click', () => {

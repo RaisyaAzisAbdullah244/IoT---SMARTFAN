@@ -23,8 +23,8 @@ body {
 .nav-link-box { 
     font-weight: 800; 
     color: #94a3b8; 
-    padding: 10px 18px; 
-    border-radius: 14px; 
+    padding: 8px 18px; 
+    border-radius: 12px; 
     border: none; 
     background: transparent; 
     transition: all 0.3s ease; 
@@ -41,14 +41,22 @@ body {
     font-weight: 800; 
     background: #e2e8f0; 
     color: #334155;
-    padding: 6px 14px; 
+    padding: 8px 18px; 
     border-radius: 12px; 
-    font-size: 0.9rem;
+    font-size: 0.95rem;
+    margin-left: 5px;
+}
+
+@media (max-width: 991px) {
+    .nav-time-box {
+        margin-left: 0;
+        margin-top: 5px;
+    }
 }
 
 .card-custom { 
     border: none; 
-    border-radius: 24px; 
+    border-radius: 28px; 
     background: #fff; 
     box-shadow: 0 10px 25px rgba(226, 232, 240, 0.6); 
 }
@@ -83,7 +91,7 @@ body {
 .btn-gradient { 
     background: linear-gradient(135deg, #6366f1, #a855f7); 
     color: #fff; 
-    border-radius: 16px; 
+    border-radius: 20px; 
     padding: 12px; 
     font-weight: 800; 
     border: none;
