@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iot - SMARTFAN</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Chart.js dan MQTT.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">🌀 IoT - SMARTFAN</a>
+            <div class="collapse navbar-collapse justify-content-end">
+                <ul class="nav nav-pills align-items-center" id="pills-tab" role="tablist">
+                    <!-- Tombol Navigasi Tab -->
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link-box active" data-bs-toggle="pill" data-bs-target="#tab-dasbor" type="button" role="tab" aria-selected="true">Dashboard</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link-box" id="btn-tab-datalog" data-bs-toggle="pill" data-bs-target="#tab-datalog" type="button" role="tab" aria-selected="false">Data Logging</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link-box" data-bs-toggle="pill" data-bs-target="#tab-pengaturan" type="button" role="tab" aria-selected="false">Setting</button>
+                    </li>
+                    <li class="nav-item nav-time-box"><span id="jamDigital">00:00:00</span></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- KONTAINER UTAMA UNTUK SEMUA TAB -->
+    <div class="container mt-4 mb-5 tab-content" id="pills-tabContent">
+        
+        <!-- ================= TAB 1: DASBOR ================= -->
+        <!-- Pastikan hanya tab ini yang memiliki kelas "show active" saat web pertama dibuka -->
+        <div class="tab-pane fade show active" id="tab-dasbor" role="tabpanel">
+            <div class="text-center mb-4"><span id="status-koneksi" class="badge bg-warning text-dark px-3 py-2">Menghubungkan ke MQTT...</span></div>
+            
+            <div class="row text-center g-4 mb-4">
+                <div class="col-md-3"><div class="card card-custom card-suhu p-4"><h6 class="fw-bold">Suhu Ruangan</h6><div class="value-text text-suhu" id="suhu_val">--°</div></div></div>
+                <div class="col-md-3"><div class="card card-custom card-kelembapan p-4"><h6 class="fw-bold">Kelembapan</h6><div class="value-text text-kelembapan" id="kelembapan_val">--%</div></div></div>
+                <div class="col-md-3"><div class="card card-custom card-udara p-4"><h6 class="fw-bold">Kualitas Udara</h6><div class="value-text text-udara" id="udara_val">--</div></div></div>
+                <div class="col-md-3"><div class="card card-custom card-kipas p-4"><h6 class="fw-bold">Status Kipas</h6><div class="value-text text-kipas" id="kipas_val">--</div></div></div>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-md-4"><div class="card card-custom p-4"><h6 class="fw-bold text-suhu">Tren Suhu</h6><div class="chart-container"><canvas id="chartSuhu"></canvas></div></div></div>
+                <div class="col-md-4"><div class="card card-custom p-4"><h6 class="fw-bold text-kelembapan">Tren Kelembapan</h6><div class="chart-container"><canvas id="chartKelembapan"></canvas></div></div></div>
+                <div class="col-md-4"><div class="card card-custom p-4"><h6 class="fw-bold text-udara">Tren Udara</h6><div class="chart-container"><canvas id="chartUdara"></canvas></div></div></div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 2: DATA LOG ================= -->
+        <!-- Jangan taruh 'show active' di sini -->
+        <div class="tab-pane fade" id="tab-datalog" role="tabpanel">
+            <div class="d-flex justify-content-between mb-3 align-items-center">
+                <div>
+                    <h4 class="fw-bold mb-0">Riwayat Sensor (MySQL)</h4>
+                    <small class="text-muted fw-bold">Menampilkan rekaman histori dari database InfinityFree</small>
+                </div>
+                <button class="btn btn-gradient" onclick="window.print()">📥 Cetak</button>
+            </div>
+            <div class="card card-custom p-4">
+                <div class="table-responsive">
+                    <table class="table text-center align-middle">
+                        <thead><tr><th>Waktu Log</th><th>Suhu</th><th>Kelembapan</th><th>Kualitas Udara</th><th>Status Kipas</th></tr></thead>
+                        <tbody id="isi-tabel-mysql">
+                            <tr><td colspan="5" class="py-5 fw-bold text-muted">Memuat dari Database...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 3: PENGATURAN ================= -->
+        <!-- Jangan taruh 'show active' di sini -->
+        <div class="tab-pane fade" id="tab-pengaturan" role="tabpanel">
+            <div class="row justify-content-center">
+                <div class="col-md-6 card card-custom p-5">
+                    <div id="notif-simpan"></div>
+                    <h4 class="text-center fw-bold mb-4">Kontrol Kipas via MQTT</h4>
+                    <select id="input-kipas" class="form-select form-select-lg mb-4">
+                        <option value="AUTO">Mode Otomatis (Mengikuti Sensor)</option>
+                        <option value="ON">Nyalakan Kipas Manual (ON)</option>
+                        <option value="OFF">Matikan Kipas Manual (OFF)</option>
+                    </select>
+                    <button onclick="kirimPerintah()" class="btn btn-gradient w-100">Kirim Perintah MQTT</button>
+                </div>
+            </div>
+        </div>
+
+    </div> <!-- Akhir dari tab-content -->
+
+    <!-- Script Wajib Bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
