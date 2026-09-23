@@ -1,5 +1,5 @@
 // ==========================================
-// KONFIGURASI API MYSQL & MQTT MAQIATTO
+// KONFIGURASI API MYSQL & BROKER MAQIATTO
 // ==========================================
 const MYSQL_API_URL = "http://iot-smartfan.42web.io/api.php?action=baca_log"; 
 
@@ -16,7 +16,7 @@ function updateJam() {
 updateJam();
 setInterval(updateJam, 1000);
 
-// 2. INISIALISASI GRAFIK (CHART.JS)
+// 2. INISIALISASI GRAFIK
 let grafikW = [], dataS = [], dataK = [], dataU = [];
 
 function buatChart(ctx, dataArr, color, bgColor) {
@@ -52,7 +52,7 @@ let chartS = buatChart('chartSuhu', dataS, '#e11d48', 'rgba(225, 29, 72, 0.15)')
 let chartK = buatChart('chartKelembapan', dataK, '#0d9488', 'rgba(13, 148, 136, 0.15)');
 let chartU = buatChart('chartUdara', dataU, '#c026d3', 'rgba(192, 38, 211, 0.15)');
 
-// 3. KONEKSI MQTT MAQIATTO VIA WEBSOCKET SSL
+// 3. KONEKSI MQTT REAL MAQIATTO VIA WEBSOCKET SSL
 const client = mqtt.connect('wss://maqiatto.com:8883/mqtt', { 
     clientId: 'web_raisya_' + Math.random().toString(16).substr(2, 6), 
     username: MAQIATTO_USER, 
@@ -66,15 +66,21 @@ client.on('connect', () => {
     let badge = document.getElementById('status-koneksi');
     if (badge) {
         badge.className = "badge bg-success text-white px-3 py-2";
-        badge.innerText = "✅ Terhubung ke MQTT";
+        badge.innerText = "✅ Terhubung ke Maqiatto MQTT";
     }
     client.subscribe(TOPIK_SENSOR);
 });
 
 client.on('error', (err) => {
-    console.error("MQTT Error: ", err);
+    console.error("MQTT Maqiatto Error: ", err);
+    let badge = document.getElementById('status-koneksi');
+    if (badge) {
+        badge.className = "badge bg-danger text-white px-3 py-2";
+        badge.innerText = "❌ Gagal Koneksi Maqiatto";
+    }
 });
 
+// MENERIMA DATA SENSOR DARI ESP8266 LEO MAQIATTO
 client.on('message', (topic, message) => {
     if (topic === TOPIK_SENSOR) {
         let d = JSON.parse(message.toString());
@@ -99,7 +105,7 @@ client.on('message', (topic, message) => {
     }
 });
 
-// 4. KIRIM PERINTAH MANUAL / AUTO
+// 4. KIRIM PERINTAH KONTROL KIPAS
 function kirimPerintah() {
     let inputKipas = document.getElementById('input-kipas');
     if (!inputKipas) return;
@@ -109,15 +115,15 @@ function kirimPerintah() {
         client.publish(TOPIK_KONTROL, cmd);
         let notif = document.getElementById('notif-simpan');
         if (notif) {
-            notif.innerHTML = `<div class='alert alert-success fw-bold text-center'>✨ Perintah <b>${cmd}</b> berhasil dikirim!</div>`;
+            notif.innerHTML = `<div class='alert alert-success fw-bold text-center mt-2'>✨ Perintah <b>${cmd}</b> berhasil dikirim ke Maqiatto!</div>`;
             setTimeout(() => notif.innerHTML = '', 3000);
         }
     } else {
-        alert("Gagal: MQTT belum terhubung!");
+        alert("Gagal: Belum terhubung ke Maqiatto MQTT!");
     }
 }
 
-// 5. FETCH DATA LOG MYSQL DARI INFINITYFREE
+// 5. FETCH DATA HISTORI MYSQL INFINITYFREE
 let btnDatalog = document.getElementById('btn-tab-datalog');
 if (btnDatalog) {
     btnDatalog.addEventListener('click', () => {
@@ -131,8 +137,8 @@ if (btnDatalog) {
             if (data.length > 0) {
                 data.forEach(row => {
                     let badge = '';
-                    if (row.status_kipas === 'ON') badge = 'badge-kipas-on';
-                    else if (row.status_kipas === 'OFF') badge = 'badge-kipas-off';
+                    if (row.status_kipas.includes('ON')) badge = 'badge-kipas-on';
+                    else if (row.status_kipas.includes('OFF')) badge = 'badge-kipas-off';
                     else badge = 'bg-secondary text-white rounded-pill px-3 py-1 fw-bold';
 
                     tbody.innerHTML += `<tr>

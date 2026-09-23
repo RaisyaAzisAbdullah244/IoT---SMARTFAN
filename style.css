@@ -1,25 +1,106 @@
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap');
-body { background: #f3f6f8; font-family: 'Nunito', sans-serif; color: #475569; }
-.navbar { background: rgba(255,255,255,0.9); box-shadow: 0 4px 30px rgba(0,0,0,0.03); padding: 15px 0;}
-.navbar-brand { font-weight: 900; background: linear-gradient(135deg, #6366f1, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.nav-link-box { font-weight: 800; color: #94a3b8; padding: 8px 18px; margin: 0 5px; border-radius: 12px; border: none; background: transparent; transition: 0.3s; }
-.nav-link-box.active, .nav-link-box:hover { color: #fff; background: #6366f1; }
-.nav-time-box { font-weight: 800; background: #e2e8f0; padding: 8px 18px; border-radius: 12px; margin-left: 10px; }
-.card-custom { border: none; border-radius: 28px; background: #fff; box-shadow: 0 10px 25px rgba(226,232,240,0.6); }
+
+body { 
+    background: #f3f6f8; 
+    font-family: 'Nunito', sans-serif; 
+    color: #475569; 
+}
+
+.navbar { 
+    background: rgba(255, 255, 255, 0.95); 
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04); 
+    padding: 12px 0;
+}
+
+.navbar-brand { 
+    font-weight: 900; 
+    background: linear-gradient(135deg, #6366f1, #a855f7); 
+    -webkit-background-clip: text; 
+    -webkit-text-fill-color: transparent; 
+}
+
+.nav-link-box { 
+    font-weight: 800; 
+    color: #94a3b8; 
+    padding: 10px 18px; 
+    border-radius: 14px; 
+    border: none; 
+    background: transparent; 
+    transition: all 0.3s ease; 
+    text-align: center;
+}
+
+.nav-link-box.active, .nav-link-box:hover { 
+    color: #fff; 
+    background: #6366f1; 
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.nav-time-box { 
+    font-weight: 800; 
+    background: #e2e8f0; 
+    color: #334155;
+    padding: 6px 14px; 
+    border-radius: 12px; 
+    font-size: 0.9rem;
+}
+
+.card-custom { 
+    border: none; 
+    border-radius: 24px; 
+    background: #fff; 
+    box-shadow: 0 10px 25px rgba(226, 232, 240, 0.6); 
+}
+
 .card-suhu { background: linear-gradient(145deg, #fff1f2, #ffe4e6); }
 .card-kelembapan { background: linear-gradient(145deg, #f0fdfa, #ccfbf1); }
 .card-udara { background: linear-gradient(145deg, #fdf4ff, #fae8ff); }
 .card-kipas { background: linear-gradient(145deg, #f0f9ff, #e0f2fe); }
-.value-text { font-size: 3rem; font-weight: 900; margin-top: 10px; }
-.text-suhu { color: #e11d48; } .text-kelembapan { color: #0d9488; } .text-udara { color: #c026d3; } .text-kipas { color: #0284c7; }
-.chart-container { height: 130px; }
-.btn-gradient { background: linear-gradient(135deg, #6366f1, #a855f7); color: #fff; border-radius: 20px; padding: 12px; font-weight: 800; }
-.badge-kipas-on { background: #e0f2fe; color: #0284c7; padding: 6px 15px; border-radius: 15px;}
-.badge-kipas-off { background: #f1f5f9; color: #64748b; padding: 6px 15px; border-radius: 15px;}
-/* Pastikan container chart memiliki tinggi yang jelas agar grafik Chart.js bisa merender */
+
+.value-text { 
+    font-size: 2.2rem; 
+    font-weight: 900; 
+    margin-top: 5px; 
+}
+
+@media (min-width: 768px) {
+    .value-text { font-size: 3rem; }
+}
+
+.text-suhu { color: #e11d48; } 
+.text-kelembapan { color: #0d9488; } 
+.text-udara { color: #c026d3; } 
+.text-kipas { color: #0284c7; }
+
 .chart-container { 
     position: relative; 
-    height: 200px; /* Tingkatkan tinggi agar grafik terlihat jelas */
+    height: 180px; 
     width: 100%; 
-    margin-top: 15px; 
+    margin-top: 10px; 
+}
+
+.btn-gradient { 
+    background: linear-gradient(135deg, #6366f1, #a855f7); 
+    color: #fff; 
+    border-radius: 16px; 
+    padding: 12px; 
+    font-weight: 800; 
+    border: none;
+}
+
+.badge-kipas-on { 
+    background: #e0f2fe; 
+    color: #0284c7; 
+    padding: 6px 15px; 
+    border-radius: 15px;
+    font-weight: 800;
+}
+
+.badge-kipas-off { 
+    background: #f1f5f9; 
+    color: #64748b; 
+    padding: 6px 15px; 
+    border-radius: 15px;
+    font-weight: 800;
 }
