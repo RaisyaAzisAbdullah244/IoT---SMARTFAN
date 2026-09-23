@@ -8,10 +8,14 @@ const MAQIATTO_PASS = "abdullahazis8040";
 const TOPIK_SENSOR  = "azis.reno8@gmail.com/Sensor";
 const TOPIK_KONTROL = "azis.reno8@gmail.com/Kontrol";
 
-// 1. JAM DIGITAL
+// 1. JAM DIGITAL (MEMPERBARUI JAM LAPTOP DAN HP)
 function updateJam() {
-    let elem = document.getElementById("jamDigital");
-    if (elem) elem.innerHTML = new Date().toLocaleTimeString('id-ID');
+    let jamNow = new Date().toLocaleTimeString('id-ID');
+    let elemDesk = document.getElementById("jamDigital");
+    let elemMob  = document.getElementById("jamDigitalMobile");
+    
+    if (elemDesk) elemDesk.innerHTML = jamNow;
+    if (elemMob)  elemMob.innerHTML  = jamNow;
 }
 updateJam();
 setInterval(updateJam, 1000);

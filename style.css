@@ -41,17 +41,10 @@ body {
     font-weight: 800; 
     background: #e2e8f0; 
     color: #334155;
-    padding: 8px 18px; 
+    padding: 8px 16px; 
     border-radius: 12px; 
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     margin-left: 5px;
-}
-
-@media (max-width: 991px) {
-    .nav-time-box {
-        margin-left: 0;
-        margin-top: 5px;
-    }
 }
 
 .card-custom { 
