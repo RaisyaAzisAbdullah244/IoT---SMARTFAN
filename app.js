@@ -37,8 +37,8 @@ function buatChart(ctx, dataArr, labelNama, color, bgColor) {
                 fill: true, 
                 tension: 0.3,
                 borderWidth: 3,
-                pointRadius: 5,            // Menampilkan titik agar mudah diklik
-                pointHoverRadius: 8,       // Membesar saat ditekan/di-hover
+                pointRadius: 4,            // Titik grafik terlihat rapi
+                pointHoverRadius: 7,       // Membesar saat ditekan/di-hover
                 pointBackgroundColor: color
             }] 
         }, 
@@ -55,7 +55,6 @@ function buatChart(ctx, dataArr, labelNama, color, bgColor) {
                     enabled: true,
                     callbacks: {
                         title: function(tooltipItems) {
-                            // Menampilkan Tanggal dan Waktu Data Diterima dari ESP
                             return '🕒 Waktu: ' + tooltipItems[0].label;
                         },
                         label: function(tooltipItem) {
@@ -102,7 +101,7 @@ client.on('error', (err) => {
     }
 });
 
-// MENERIMA DATA SENSOR DARI ESP8266 (TIAP 5 MENIT)
+// MENERIMA DATA SENSOR DARI ESP8266 (TIAP 30 DETIK)
 client.on('message', (topic, message) => {
     if (topic === TOPIK_SENSOR) {
         let d = JSON.parse(message.toString());
@@ -113,7 +112,7 @@ client.on('message', (topic, message) => {
         if (document.getElementById('udara_val')) document.getElementById('udara_val').innerText = d.kualitas_udara;
         if (document.getElementById('kipas_val')) document.getElementById('kipas_val').innerText = d.status_kipas;
 
-        // Ambil Tanggal dan Jam Lengkap saat data tiba
+        // Tanggal dan Jam Lengkap saat data diterima
         let waktuLengkap = new Date().toLocaleString('id-ID', {
             day: '2-digit', month: '2-digit', year: 'numeric',
             hour: '2-digit', minute: '2-digit', second: '2-digit'
@@ -124,8 +123,8 @@ client.on('message', (topic, message) => {
         dataK.push(d.kelembapan); 
         dataU.push(d.kualitas_udara);
         
-        // Batasi grafik menyimpan maksimal 20 titik terakhir
-        if (grafikW.length > 20) { 
+        // Simpan maksimal 30 titik data terakhir (15 menit riwayat grafik)
+        if (grafikW.length > 30) { 
             grafikW.shift(); dataS.shift(); dataK.shift(); dataU.shift(); 
         }
         
