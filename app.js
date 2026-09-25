@@ -7,7 +7,7 @@ const MYSQL_API_URL = "http://iot-smartfan.42web.io/api.php?action=baca_log";
 const TOPIK_SENSOR  = "iot-smartfan/sensor";
 const TOPIK_KONTROL = "iot-smartfan/kontrol";
 
-// 1. JAM DIGITAL (MEMPERBARUI JAM LAPTOP DAN HP)
+// 1. JAM DIGITAL
 function updateJam() {
     let jamNow = new Date().toLocaleTimeString('id-ID');
     let elemDesk = document.getElementById("jamDigital");
@@ -19,10 +19,10 @@ function updateJam() {
 updateJam();
 setInterval(updateJam, 1000);
 
-// 2. INISIALISASI GRAFIK (CHART.JS)
+// 2. INISIALISASI GRAFIK (CHART.JS) DENGAN TAMPILAN TANGGAL & WAKTU SENSOR
 let grafikW = [], dataS = [], dataK = [], dataU = [];
 
-function buatChart(ctx, dataArr, color, bgColor) {
+function buatChart(ctx, dataArr, labelNama, color, bgColor) {
     let elem = document.getElementById(ctx);
     if (!elem) return null;
     return new Chart(elem.getContext('2d'), { 
@@ -30,30 +30,51 @@ function buatChart(ctx, dataArr, color, bgColor) {
         data: { 
             labels: grafikW, 
             datasets: [{ 
+                label: labelNama,
                 data: dataArr, 
                 borderColor: color, 
                 backgroundColor: bgColor, 
                 fill: true, 
-                tension: 0.4,
+                tension: 0.3,
                 borderWidth: 3,
-                pointRadius: 0
+                pointRadius: 5,            // Menampilkan titik agar mudah diklik
+                pointHoverRadius: 8,       // Membesar saat ditekan/di-hover
+                pointBackgroundColor: color
             }] 
         }, 
         options: { 
             responsive: true,
             maintainAspectRatio: false, 
-            plugins: { legend: { display: false } }, 
+            interaction: {
+                mode: 'nearest',
+                intersect: false,
+            },
+            plugins: { 
+                legend: { display: false },
+                tooltip: {
+                    enabled: true,
+                    callbacks: {
+                        title: function(tooltipItems) {
+                            // Menampilkan Tanggal dan Waktu Data Diterima dari ESP
+                            return '🕒 Waktu: ' + tooltipItems[0].label;
+                        },
+                        label: function(tooltipItem) {
+                            return ` ${tooltipItem.dataset.label}: ${tooltipItem.raw}`;
+                        }
+                    }
+                }
+            }, 
             scales: { 
                 x: { display: false },
-                y: { display: false, min: 0 } 
+                y: { display: true, beginAtZero: false } 
             } 
         } 
     });
 }
 
-let chartS = buatChart('chartSuhu', dataS, '#e11d48', 'rgba(225, 29, 72, 0.15)');
-let chartK = buatChart('chartKelembapan', dataK, '#0d9488', 'rgba(13, 148, 136, 0.15)');
-let chartU = buatChart('chartUdara', dataU, '#c026d3', 'rgba(192, 38, 211, 0.15)');
+let chartS = buatChart('chartSuhu', dataS, 'Suhu (°C)', '#e11d48', 'rgba(225, 29, 72, 0.15)');
+let chartK = buatChart('chartKelembapan', dataK, 'Kelembapan (%)', '#0d9488', 'rgba(13, 148, 136, 0.15)');
+let chartU = buatChart('chartUdara', dataU, 'Udara (PPM)', '#c026d3', 'rgba(192, 38, 211, 0.15)');
 
 // 3. KONEKSI MQTT HIVEMQ VIA WEBSOCKET SSL (PORT 8884)
 const client = mqtt.connect('wss://broker.hivemq.com:8884/mqtt', { 
@@ -81,22 +102,30 @@ client.on('error', (err) => {
     }
 });
 
-// MENERIMA DATA SENSOR REAL-TIME
+// MENERIMA DATA SENSOR DARI ESP8266 (TIAP 5 MENIT)
 client.on('message', (topic, message) => {
     if (topic === TOPIK_SENSOR) {
         let d = JSON.parse(message.toString());
         
+        // Update Ringkasan Nilai Kartu
         if (document.getElementById('suhu_val')) document.getElementById('suhu_val').innerText = d.suhu + "°";
         if (document.getElementById('kelembapan_val')) document.getElementById('kelembapan_val').innerText = d.kelembapan + "%";
         if (document.getElementById('udara_val')) document.getElementById('udara_val').innerText = d.kualitas_udara;
         if (document.getElementById('kipas_val')) document.getElementById('kipas_val').innerText = d.status_kipas;
 
-        grafikW.push(new Date().toLocaleTimeString('id-ID'));
+        // Ambil Tanggal dan Jam Lengkap saat data tiba
+        let waktuLengkap = new Date().toLocaleString('id-ID', {
+            day: '2-digit', month: '2-digit', year: 'numeric',
+            hour: '2-digit', minute: '2-digit', second: '2-digit'
+        });
+
+        grafikW.push(waktuLengkap);
         dataS.push(d.suhu); 
         dataK.push(d.kelembapan); 
         dataU.push(d.kualitas_udara);
         
-        if (grafikW.length > 15) { 
+        // Batasi grafik menyimpan maksimal 20 titik terakhir
+        if (grafikW.length > 20) { 
             grafikW.shift(); dataS.shift(); dataK.shift(); dataU.shift(); 
         }
         
