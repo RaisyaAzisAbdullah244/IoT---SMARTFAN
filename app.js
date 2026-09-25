@@ -19,17 +19,15 @@ function updateJam() {
 updateJam();
 setInterval(updateJam, 1000);
 
-// 2. INISIALISASI GRAFIK DENGAN LOGIKA TOGGLE CLICK ON/OFF TOOLTIP
+// 2. INISIALISASI GRAFIK DENGAN LOGIKA TOGGLE (KLIK MUNCUL / HILANG)
 let grafikW = [], dataS = [], dataK = [], dataU = [];
 
-// Variabel untuk menyimpan indeks titik yang sedang aktif dibuka di tiap grafik
-let activePointS = null;
-let activePointK = null;
-let activePointU = null;
-
-function buatChart(ctx, dataArr, labelNama, color, bgColor, activePointTracker) {
+function buatChart(ctx, dataArr, labelNama, color, bgColor) {
     let elem = document.getElementById(ctx);
     if (!elem) return null;
+
+    // Memori untuk mengingat titik mana yang sedang ditekan
+    let titikAktif = null;
 
     let chartInstance = new Chart(elem.getContext('2d'), { 
         type: 'line', 
@@ -43,7 +41,7 @@ function buatChart(ctx, dataArr, labelNama, color, bgColor, activePointTracker) 
                 fill: true, 
                 tension: 0.3,
                 borderWidth: 3,
-                pointRadius: 6,            // Ukuran titik grafik agar nyaman ditekan
+                pointRadius: 6,            // Ukuran titik agar mudah ditekan jari
                 pointHoverRadius: 9,
                 pointBackgroundColor: color
             }] 
@@ -51,15 +49,48 @@ function buatChart(ctx, dataArr, labelNama, color, bgColor, activePointTracker) 
         options: { 
             responsive: true,
             maintainAspectRatio: false, 
-            // Matikan trigger hover bawaan
+            
+            // Matikan efek sentuh melayang (hover), HANYA merespon klik/tekan
             events: ['click', 'touchstart'], 
+            interaction: {
+                mode: 'nearest',
+                intersect: true, // Wajib menekan pas di titiknya
+            },
+            
+            // Logika Klik (Toggle)
+            onClick: (e, elements, chart) => {
+                if (elements.length > 0) {
+                    let indexDitekan = elements[0].index;
+                    
+                    // Jika titik yang sama ditekan ulang -> Sembunyikan (Toggle OFF)
+                    if (titikAktif === indexDitekan) {
+                        titikAktif = null;
+                        chart.tooltip.setActiveElements([], { x: 0, y: 0 });
+                    } 
+                    // Jika titik baru ditekan -> Tampilkan (Toggle ON)
+                    else {
+                        titikAktif = indexDitekan;
+                    }
+                } else {
+                    // Jika menekan area kosong grafik -> Sembunyikan
+                    titikAktif = null;
+                    chart.tooltip.setActiveElements([], { x: 0, y: 0 });
+                }
+                chart.update();
+            },
+            
             plugins: { 
                 legend: { display: false },
                 tooltip: {
-                    enabled: false, // Digunakan kustom lewat onClick handler
-                    external: function(context) {
-                        // Kontrol tooltip kustom disesuaikan via onClick
+                    enabled: true, // KUNCI PERBAIKAN: Harus diaktifkan
+                    displayColors: false,
+                    padding: 10,
+                    
+                    // Filter: Hanya izinkan kotak info muncul jika indexnya sama dengan titik yang sedang aktif ditekan
+                    filter: function(context) {
+                        return context.dataIndex === titikAktif;
                     },
+                    
                     callbacks: {
                         title: function(tooltipItems) {
                             return '🕒 Waktu: ' + tooltipItems[0].label;
@@ -70,29 +101,6 @@ function buatChart(ctx, dataArr, labelNama, color, bgColor, activePointTracker) 
                     }
                 }
             }, 
-            onClick: (e, elements) => {
-                if (elements.length > 0) {
-                    let index = elements[0].index;
-                    
-                    // TOGGLE LOGIC: Jika titik yang sama ditekan kembali, sembunyikan detail
-                    if (activePointTracker.index === index) {
-                        chartInstance.setActiveElements([]);
-                        chartInstance.tooltip.setActiveElements([], { x: 0, y: 0 });
-                        activePointTracker.index = null;
-                    } else {
-                        // Tampilkan detail pada titik yang baru ditekan
-                        activePointTracker.index = index;
-                        chartInstance.setActiveElements([{ datasetIndex: 0, index: index }]);
-                        chartInstance.tooltip.setActiveElements([{ datasetIndex: 0, index: index }], { x: e.x, y: e.y });
-                    }
-                } else {
-                    // Klik di luar titik akan menyembunyikan detail
-                    chartInstance.setActiveElements([]);
-                    chartInstance.tooltip.setActiveElements([], { x: 0, y: 0 });
-                    activePointTracker.index = null;
-                }
-                chartInstance.update();
-            },
             scales: { 
                 x: { display: false },
                 y: { display: true, beginAtZero: false } 
@@ -103,13 +111,10 @@ function buatChart(ctx, dataArr, labelNama, color, bgColor, activePointTracker) 
     return chartInstance;
 }
 
-let activeTrackerS = { index: null };
-let activeTrackerK = { index: null };
-let activeTrackerU = { index: null };
-
-let chartS = buatChart('chartSuhu', dataS, 'Suhu (°C)', '#e11d48', 'rgba(225, 29, 72, 0.15)', activeTrackerS);
-let chartK = buatChart('chartKelembapan', dataK, 'Kelembapan (%)', '#0d9488', 'rgba(13, 148, 136, 0.15)', activeTrackerK);
-let chartU = buatChart('chartUdara', dataU, 'Udara (PPM)', '#c026d3', 'rgba(192, 38, 211, 0.15)', activeTrackerU);
+// Inisialisasi ketiga grafik
+let chartS = buatChart('chartSuhu', dataS, 'Suhu (°C)', '#e11d48', 'rgba(225, 29, 72, 0.15)');
+let chartK = buatChart('chartKelembapan', dataK, 'Kelembapan (%)', '#0d9488', 'rgba(13, 148, 136, 0.15)');
+let chartU = buatChart('chartUdara', dataU, 'Udara (PPM)', '#c026d3', 'rgba(192, 38, 211, 0.15)');
 
 // 3. KONEKSI MQTT HIVEMQ VIA WEBSOCKET SSL (PORT 8884)
 const client = mqtt.connect('wss://broker.hivemq.com:8884/mqtt', { 
@@ -159,6 +164,7 @@ client.on('message', (topic, message) => {
         dataK.push(d.kelembapan); 
         dataU.push(d.kualitas_udara);
         
+        // Batasi memori titik grafik ke 30 titik (15 menit terakhir)
         if (grafikW.length > 30) { 
             grafikW.shift(); dataS.shift(); dataK.shift(); dataU.shift(); 
         }
