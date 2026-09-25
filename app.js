@@ -19,13 +19,19 @@ function updateJam() {
 updateJam();
 setInterval(updateJam, 1000);
 
-// 2. INISIALISASI GRAFIK (CHART.JS) DENGAN TAMPILAN TANGGAL & WAKTU SENSOR
+// 2. INISIALISASI GRAFIK DENGAN LOGIKA TOGGLE CLICK ON/OFF TOOLTIP
 let grafikW = [], dataS = [], dataK = [], dataU = [];
 
-function buatChart(ctx, dataArr, labelNama, color, bgColor) {
+// Variabel untuk menyimpan indeks titik yang sedang aktif dibuka di tiap grafik
+let activePointS = null;
+let activePointK = null;
+let activePointU = null;
+
+function buatChart(ctx, dataArr, labelNama, color, bgColor, activePointTracker) {
     let elem = document.getElementById(ctx);
     if (!elem) return null;
-    return new Chart(elem.getContext('2d'), { 
+
+    let chartInstance = new Chart(elem.getContext('2d'), { 
         type: 'line', 
         data: { 
             labels: grafikW, 
@@ -37,22 +43,23 @@ function buatChart(ctx, dataArr, labelNama, color, bgColor) {
                 fill: true, 
                 tension: 0.3,
                 borderWidth: 3,
-                pointRadius: 4,            // Titik grafik terlihat rapi
-                pointHoverRadius: 7,       // Membesar saat ditekan/di-hover
+                pointRadius: 6,            // Ukuran titik grafik agar nyaman ditekan
+                pointHoverRadius: 9,
                 pointBackgroundColor: color
             }] 
         }, 
         options: { 
             responsive: true,
             maintainAspectRatio: false, 
-            interaction: {
-                mode: 'nearest',
-                intersect: false,
-            },
+            // Matikan trigger hover bawaan
+            events: ['click', 'touchstart'], 
             plugins: { 
                 legend: { display: false },
                 tooltip: {
-                    enabled: true,
+                    enabled: false, // Digunakan kustom lewat onClick handler
+                    external: function(context) {
+                        // Kontrol tooltip kustom disesuaikan via onClick
+                    },
                     callbacks: {
                         title: function(tooltipItems) {
                             return '🕒 Waktu: ' + tooltipItems[0].label;
@@ -63,17 +70,46 @@ function buatChart(ctx, dataArr, labelNama, color, bgColor) {
                     }
                 }
             }, 
+            onClick: (e, elements) => {
+                if (elements.length > 0) {
+                    let index = elements[0].index;
+                    
+                    // TOGGLE LOGIC: Jika titik yang sama ditekan kembali, sembunyikan detail
+                    if (activePointTracker.index === index) {
+                        chartInstance.setActiveElements([]);
+                        chartInstance.tooltip.setActiveElements([], { x: 0, y: 0 });
+                        activePointTracker.index = null;
+                    } else {
+                        // Tampilkan detail pada titik yang baru ditekan
+                        activePointTracker.index = index;
+                        chartInstance.setActiveElements([{ datasetIndex: 0, index: index }]);
+                        chartInstance.tooltip.setActiveElements([{ datasetIndex: 0, index: index }], { x: e.x, y: e.y });
+                    }
+                } else {
+                    // Klik di luar titik akan menyembunyikan detail
+                    chartInstance.setActiveElements([]);
+                    chartInstance.tooltip.setActiveElements([], { x: 0, y: 0 });
+                    activePointTracker.index = null;
+                }
+                chartInstance.update();
+            },
             scales: { 
                 x: { display: false },
                 y: { display: true, beginAtZero: false } 
             } 
         } 
     });
+
+    return chartInstance;
 }
 
-let chartS = buatChart('chartSuhu', dataS, 'Suhu (°C)', '#e11d48', 'rgba(225, 29, 72, 0.15)');
-let chartK = buatChart('chartKelembapan', dataK, 'Kelembapan (%)', '#0d9488', 'rgba(13, 148, 136, 0.15)');
-let chartU = buatChart('chartUdara', dataU, 'Udara (PPM)', '#c026d3', 'rgba(192, 38, 211, 0.15)');
+let activeTrackerS = { index: null };
+let activeTrackerK = { index: null };
+let activeTrackerU = { index: null };
+
+let chartS = buatChart('chartSuhu', dataS, 'Suhu (°C)', '#e11d48', 'rgba(225, 29, 72, 0.15)', activeTrackerS);
+let chartK = buatChart('chartKelembapan', dataK, 'Kelembapan (%)', '#0d9488', 'rgba(13, 148, 136, 0.15)', activeTrackerK);
+let chartU = buatChart('chartUdara', dataU, 'Udara (PPM)', '#c026d3', 'rgba(192, 38, 211, 0.15)', activeTrackerU);
 
 // 3. KONEKSI MQTT HIVEMQ VIA WEBSOCKET SSL (PORT 8884)
 const client = mqtt.connect('wss://broker.hivemq.com:8884/mqtt', { 
@@ -112,7 +148,7 @@ client.on('message', (topic, message) => {
         if (document.getElementById('udara_val')) document.getElementById('udara_val').innerText = d.kualitas_udara;
         if (document.getElementById('kipas_val')) document.getElementById('kipas_val').innerText = d.status_kipas;
 
-        // Tanggal dan Jam Lengkap saat data diterima
+        // Tanggal dan Jam Lengkap
         let waktuLengkap = new Date().toLocaleString('id-ID', {
             day: '2-digit', month: '2-digit', year: 'numeric',
             hour: '2-digit', minute: '2-digit', second: '2-digit'
@@ -123,14 +159,13 @@ client.on('message', (topic, message) => {
         dataK.push(d.kelembapan); 
         dataU.push(d.kualitas_udara);
         
-        // Simpan maksimal 30 titik data terakhir (15 menit riwayat grafik)
         if (grafikW.length > 30) { 
             grafikW.shift(); dataS.shift(); dataK.shift(); dataU.shift(); 
         }
         
-        if (chartS) chartS.update(); 
-        if (chartK) chartK.update(); 
-        if (chartU) chartU.update();
+        if (chartS) chartS.update('none'); 
+        if (chartK) chartK.update('none'); 
+        if (chartU) chartU.update('none');
     }
 });
 
