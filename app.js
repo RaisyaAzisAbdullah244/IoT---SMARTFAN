@@ -1,12 +1,11 @@
 // ==========================================
-// KONFIGURASI API MYSQL & BROKER MAQIATTO
+// KONFIGURASI API MYSQL & BROKER HIVEMQ
 // ==========================================
 const MYSQL_API_URL = "http://iot-smartfan.42web.io/api.php?action=baca_log"; 
 
-const MAQIATTO_USER = "azis.reno8@gmail.com"; 
-const MAQIATTO_PASS = "abdullahazis8040"; 
-const TOPIK_SENSOR  = "azis.reno8@gmail.com/Sensor";
-const TOPIK_KONTROL = "azis.reno8@gmail.com/Kontrol";
+// Topik IoT Smartfan
+const TOPIK_SENSOR  = "iot-smartfan/sensor";
+const TOPIK_KONTROL = "iot-smartfan/kontrol";
 
 // 1. JAM DIGITAL (MEMPERBARUI JAM LAPTOP DAN HP)
 function updateJam() {
@@ -56,11 +55,9 @@ let chartS = buatChart('chartSuhu', dataS, '#e11d48', 'rgba(225, 29, 72, 0.15)')
 let chartK = buatChart('chartKelembapan', dataK, '#0d9488', 'rgba(13, 148, 136, 0.15)');
 let chartU = buatChart('chartUdara', dataU, '#c026d3', 'rgba(192, 38, 211, 0.15)');
 
-// 3. KONEKSI MQTT MAQIATTO VIA WEBSOCKET SSL
-const client = mqtt.connect('wss://maqiatto.com:8883/mqtt', { 
+// 3. KONEKSI MQTT HIVEMQ VIA WEBSOCKET SSL (PORT 8884)
+const client = mqtt.connect('wss://broker.hivemq.com:8884/mqtt', { 
     clientId: 'web_raisya_' + Math.random().toString(16).substr(2, 6), 
-    username: MAQIATTO_USER, 
-    password: MAQIATTO_PASS,
     clean: true,
     reconnectPeriod: 2000,
     connectTimeout: 30 * 1000
@@ -70,21 +67,21 @@ client.on('connect', () => {
     let badge = document.getElementById('status-koneksi');
     if (badge) {
         badge.className = "badge bg-success text-white px-3 py-2";
-        badge.innerText = "✅ Terhubung ke Maqiatto MQTT";
+        badge.innerText = "✅ Terhubung ke HiveMQ";
     }
     client.subscribe(TOPIK_SENSOR);
 });
 
 client.on('error', (err) => {
-    console.error("MQTT Maqiatto Error: ", err);
+    console.error("MQTT HiveMQ Error: ", err);
     let badge = document.getElementById('status-koneksi');
     if (badge) {
         badge.className = "badge bg-danger text-white px-3 py-2";
-        badge.innerText = "❌ Gagal Koneksi Maqiatto";
+        badge.innerText = "❌ Gagal Koneksi HiveMQ";
     }
 });
 
-// MENERIMA DATA SENSOR REAL-TIME DARI MAQIATTO
+// MENERIMA DATA SENSOR REAL-TIME
 client.on('message', (topic, message) => {
     if (topic === TOPIK_SENSOR) {
         let d = JSON.parse(message.toString());
@@ -123,7 +120,7 @@ function kirimPerintah() {
             setTimeout(() => notif.innerHTML = '', 3000);
         }
     } else {
-        alert("Gagal: Belum terhubung ke Maqiatto MQTT!");
+        alert("Gagal: Belum terhubung ke HiveMQ MQTT!");
     }
 }
 

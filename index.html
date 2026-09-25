@@ -22,7 +22,7 @@
             <!-- Brand / Judul -->
             <a class="navbar-brand me-auto me-lg-4" href="#">🌀 IoT - SMARTFAN</a>
             
-            <!-- Jam Digital Khusus Tampilan HP (Posisi antara Judul dan Garis Tiga) -->
+            <!-- Jam Digital Khusus Tampilan HP -->
             <span class="nav-time-box d-lg-none me-2" id="jamDigitalMobile">00:00:00</span>
 
             <!-- Tombol Garis Tiga (Hamburger) HP -->
@@ -42,7 +42,7 @@
                     <li class="nav-item" role="presentation">
                         <button class="nav-link-box w-100" data-bs-toggle="pill" data-bs-target="#tab-pengaturan" type="button" role="tab" aria-selected="false">Setting</button>
                     </li>
-                    <!-- Jam Digital Khusus Tampilan Laptop (Posisi di kanan Setting) -->
+                    <!-- Jam Digital Khusus Tampilan Laptop -->
                     <li class="nav-item d-none d-lg-block">
                         <span class="nav-time-box" id="jamDigital">00:00:00</span>
                     </li>
@@ -58,7 +58,7 @@
         <!-- TAB 1: DASBOR -->
         <div class="tab-pane fade show active" id="tab-dasbor" role="tabpanel">
             <div class="text-center mb-4">
-                <span id="status-koneksi" class="badge bg-warning text-dark px-3 py-2">Menghubungkan ke Maqiatto...</span>
+                <span id="status-koneksi" class="badge bg-warning text-dark px-3 py-2">Menghubungkan ke HiveMQ...</span>
             </div>
             
             <div class="row text-center g-3 mb-4">
@@ -82,7 +82,7 @@
                 </div>
                 <div class="col-6 col-md-3">
                     <div class="card card-custom card-kipas p-3 p-md-4">
-                        <h6 class="fw-bold">Status Exhaust Fan</h6>
+                        <h6 class="fw-bold">Status ExhaustFan</h6>
                         <div class="value-text text-kipas" id="kipas_val">--</div>
                     </div>
                 </div>
@@ -103,7 +103,7 @@
                 </div>
                 <div class="col-12 col-md-4">
                     <div class="card card-custom p-3 p-md-4">
-                        <h6 class="fw-bold text-udara">Grafik Kualitas Udara</h6>
+                        <h6 class="fw-bold text-udara">Grafik Udara</h6>
                         <div class="chart-container"><canvas id="chartUdara"></canvas></div>
                     </div>
                 </div>
@@ -115,7 +115,7 @@
             <div class="d-flex justify-content-between mb-3 align-items-center flex-wrap gap-2">
                 <div>
                     <h4 class="fw-bold mb-0">Riwayat Sensor (MySQL)</h4>
-                    <small class="text-muted fw-bold">Menampilkan rekaman histori dari database InfinityFree</small>
+                    <small class="text-muted fw-bold">Menampilkan rekaman histori dari database MySQL</small>
                 </div>
                 <button class="btn btn-gradient ms-auto" onclick="window.print()">📥 Cetak</button>
             </div>
@@ -123,7 +123,7 @@
                 <div class="table-responsive">
                     <table class="table text-center align-middle">
                         <thead>
-                            <tr><th>Waktu Log</th><th>Suhu</th><th>Kelembapan</th><th>Kualitas Udara</th><th>Status Kipas</th></tr>
+                            <tr><th>Waktu Log</th><th>Suhu</th><th>Kelembapan</th><th>Kualitas Udara</th><th>Status ExhaustFan</th></tr>
                         </thead>
                         <tbody id="isi-tabel-mysql">
                             <tr><td colspan="5" class="py-5 fw-bold text-muted">Memuat dari Database...</td></tr>
@@ -138,11 +138,11 @@
             <div class="row justify-content-center">
                 <div class="col-12 col-md-6 card card-custom p-4 p-md-5">
                     <div id="notif-simpan"></div>
-                    <h4 class="text-center fw-bold mb-4">Kontrol Kipas via Maqiatto</h4>
+                    <h4 class="text-center fw-bold mb-4">Kontrol Kipas via HiveMQ</h4>
                     <select id="input-kipas" class="form-select form-select-lg mb-4">
                         <option value="AUTO">Mode Otomatis (Mengikuti Sensor)</option>
-                        <option value="ON">Nyalakan Kipas Manual (ON)</option>
-                        <option value="OFF">Matikan Kipas Manual (OFF)</option>
+                        <option value="ON">Nyalakan ExhaustFan Manual (ON)</option>
+                        <option value="OFF">Matikan ExhaustFan Manual (OFF)</option>
                     </select>
                     <button onclick="kirimPerintah()" class="btn btn-gradient w-100">Kirim Perintah MQTT</button>
                 </div>
